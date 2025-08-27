@@ -5,6 +5,7 @@
 # - Semua fungsi bantu diimpor dari skrip utama.
 #================================================================================#
 
+# Fungsi utama untuk menghapus domain
 function main_remove() {
     local clean_mode=0
     if [[ "$1" == "--clean" ]]; then
@@ -87,6 +88,7 @@ function main_remove() {
     echo -e "${GREEN}===============================================================${NC}"
 }
 
+# Fungsi untuk memeriksa sinkronisasi konfigurasi (Health Check)
 function health_check() {
     print_title "HEALTH CHECK: Memeriksa Sinkronisasi Konfigurasi"
     echo -n "[*] Mengumpulkan data konfigurasi Nginx dan Certbot..."
