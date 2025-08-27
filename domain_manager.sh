@@ -1,34 +1,38 @@
 #!/bin/bash
 
 #================================================================================#
-# Skrip Utama: Domain Manager Interaktif (Versi 2.0 - Tambahan Opsi Hapus Bersih)
-# - Sebuah menu sederhana untuk mengelola skrip setup dan penghapusan domain.
-# - Menambahkan opsi untuk menghapus semua file terkait (config, sertifikat, dan backup).
+# Skrip Utama: Domain Manager Interaktif (Versi 2.2 - Modular)
+# - Mengelola skrip setup dan penghapusan domain.
+# - Menggunakan file `utils.sh` untuk fungsi bantu.
+# - Menjalankan skrip dari folder `modules`.
 #================================================================================#
 
-# --- Konfigurasi Visual ---
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+# Impor file berisi fungsi-fungsi bantu
+# Penting: Pastikan `utils.sh` berada di direktori yang sama dengan skrip ini.
+source "utils.sh"
 
-# Fungsi untuk menampilkan judul berformat
-function print_title() {
-    echo -e "\n${CYAN}===============================================================${NC}"
-    echo -e "${CYAN} $1 ${NC}"
-    echo -e "${CYAN}===============================================================${NC}"
-}
-
-# --- Skrip Utama ---
-
-# 1. Cek hak akses root
+# Cek hak akses root
 if [ "$EUID" -ne 0 ]; then
   echo -e "${RED}[!] Harap jalankan skrip ini sebagai root atau dengan sudo.${NC}"
   exit 1
 fi
 
-# 2. Tampilkan Menu Utama
+# Pra-pemeriksaan di skrip utama
+print_title "PRA-PEMERIKSAAN: Memastikan Aplikasi Terinstal"
+if ! command -v nginx &> /dev/null; then echo -e "${RED}[!] Error: Nginx tidak terinstal.${NC}"; exit 1; else echo -e "${GREEN}[OK] Nginx terdeteksi.${NC}"; fi
+if ! command -v certbot &> /dev/null; then echo -e "${RED}[!] Error: Certbot tidak terinstal.${NC}"; exit 1; else echo -e "${GREEN}[OK] Certbot terdeteksi.${NC}"; fi
+
+# Cek keberadaan file modul
+if [ ! -f "modules/setup_domain.sh" ] || [ ! -f "modules/remove_domain.sh" ]; then
+    echo -e "${RED}[!] Error: File modul tidak ditemukan. Pastikan folder 'modules' berisi 'setup_domain.sh' dan 'remove_domain.sh'.${NC}"
+    exit 1
+fi
+
+# Impor skrip modul
+source modules/setup_domain.sh
+source modules/remove_domain.sh
+
+# Tampilkan Menu Utama
 clear
 print_title "Panel Kontrol Manajemen Domain"
 echo -e "Silakan pilih tindakan yang ingin Anda lakukan:"
@@ -39,7 +43,7 @@ echo -e "  ${YELLOW}3.${NC}  Hapus Bersih Domain & Semua File Terkait"
 echo -e "  ${YELLOW}0.${NC}  Keluar"
 echo ""
 
-# 3. Minta input pengguna dan validasi
+# Minta input pengguna dan validasi
 while true; do
     read -p "$(echo -e ${YELLOW}"[?]"${NC}" Masukkan nomor pilihan Anda: ")" CHOICE
     if ! [[ "$CHOICE" =~ ^[0-3]$ ]]; then
@@ -49,35 +53,16 @@ while true; do
     break
 done
 
-# 4. Jalankan skrip yang dipilih
+# Panggil fungsi utama dari modul
 case "$CHOICE" in
     1)
-        print_title "Memulai Setup Domain Baru..."
-        if [ ! -f "modules/setup_domain.sh" ]; then
-            echo -e "${RED}[!] Error: File 'modules/setup_domain.sh' tidak ditemukan.${NC}"
-            exit 1
-        fi
-        chmod +x modules/setup_domain.sh
-        bash modules/setup_domain.sh
+        main_setup
         ;;
     2)
-        print_title "Memulai Proses Penghapusan Domain (Standar)..."
-        if [ ! -f "modules/remove_domain.sh" ]; then
-            echo -e "${RED}[!] Error: File 'modules/remove_domain.sh' tidak ditemukan.${NC}"
-            exit 1
-        fi
-        chmod +x modules/remove_domain.sh
-        bash modules/remove_domain.sh
+        main_remove
         ;;
     3)
-        print_title "Memulai Penghapusan Bersih Domain..."
-        if [ ! -f "modules/remove_domain.sh" ]; then
-            echo -e "${RED}[!] Error: File 'modules/remove_domain.sh' tidak ditemukan.${NC}"
-            exit 1
-        fi
-        chmod +x modules/remove_domain.sh
-        # Menjalankan skrip penghapusan dengan flag khusus
-        bash modules/remove_domain.sh --clean
+        main_remove "--clean"
         ;;
     0)
         echo "[*] Proses dibatalkan. Selamat tinggal!"
