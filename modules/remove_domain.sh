@@ -86,7 +86,7 @@ function main_remove() {
     fi
     echo -e "       Domain ${YELLOW}$SELECTED_DOMAIN${NC} telah dihapus sepenuhnya.       "
     echo -e "${GREEN}===============================================================${NC}"
-}
+} # Tutup fungsi main_remove
 
 # Fungsi untuk memeriksa sinkronisasi konfigurasi (Health Check)
 function health_check() {
@@ -116,4 +116,4 @@ function health_check() {
     else
         echo "[*] Melewatkan pembersihan. Hanya akan menampilkan domain yang aktif dan sehat."
     fi
-}
+} # Tutup fungsi health_check
